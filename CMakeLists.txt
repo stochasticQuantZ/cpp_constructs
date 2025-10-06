@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.16)
-project(cpp_constructs)
+cmake_minimum_required(VERSION 3.22)
+project(
+  cpp_constructs
+  VERSION 1.0.0
+  LANGUAGES C CXX
+  )
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -12,17 +16,25 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+option(TEST_EXEC_REQUIRED "Compile the test as well!!" ON)
 
+set (CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
+include(AddGitSubmodule)
+
+add_git_submodule(github.com/json)
 
 # Library
-add_library(singleton src/singleton.cpp)
-target_include_directories(singleton PUBLIC include)
-target_link_libraries(singleton PUBLIC spdlog::spdlog)
 
+add_subdirectory(src)
+add_subdirectory(configured)
+
+if (TEST_EXEC_REQUIRED)
+  add_subdirectory(test)
+else()
+  message("-----------Without creating executable ----------")
+endif()
 
 # Tests
-enable_testing()
-add_executable(test_singleton test/test_singleton.cpp)
-target_link_libraries(test_singleton PRIVATE singleton)
-add_test(NAME SingletonTest COMMAND test_singleton)
+#enable_testing()
+#add_test(NAME SingletonTest COMMAND test_singleton)
 

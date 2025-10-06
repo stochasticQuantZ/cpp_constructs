@@ -1,5 +1,6 @@
 #include "singleton/singleton.hpp"
 #include <spdlog/spdlog.h>
+#include "config.hpp"
 namespace cpp_constructs {
 
 Singleton* Singleton::instance = nullptr;
@@ -32,6 +33,7 @@ std::string Singleton::get(const std::string& key) const {
 void Singleton::doSomething(){
     spdlog::set_level(spdlog::level::debug);
     spdlog::debug("Debugging using spdlog ");
+    SPDLOG_INFO("Project name: {} , Project version: {} ",project_name, project_version);
 }
 } // namespace cpp_constructs
 

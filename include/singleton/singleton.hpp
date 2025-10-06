@@ -29,5 +29,6 @@ private:
     std::unordered_map<std::string, std::string> store;
 };
 
+int test_le_be(void);
 } // namespace cpp_constructs
 

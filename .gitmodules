@@ -1,0 +1,6 @@
+[submodule "github.com/json"]
+	path = github.com/json
+	url = https://github.com/nlohmann/json
+[submodule "github.com/qemu"]
+	path = github.com/qemu
+	url = https://github.com/qemu/qemu.git
