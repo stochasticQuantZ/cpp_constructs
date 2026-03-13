@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package permutation;
+
+service PermutationService {
+  rpc GetPermutations (PermutationRequest) returns (stream PermutationReply);
+}
+
+message PermutationRequest {
+  string input = 1;
+}
+
+message PermutationReply {
+  string value = 1;
+}

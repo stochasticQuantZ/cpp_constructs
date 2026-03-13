@@ -54,6 +54,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# ---- gRPC / Protobuf ----
+find_package(Protobuf CONFIG REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+
+
+# Helpful imported executables/targets
+message(STATUS "Found Protobuf ${Protobuf_VERSION}")
+message(STATUS "Found gRPC")
+
+
 # # Find the installed Protobuf package
 # find_package(Protobuf CONFIG REQUIRED)
 
@@ -64,6 +74,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(src)
 add_subdirectory(configured)
+add_subdirectory(protobuffs)
 
 if (TEST_EXEC_REQUIRED)
   add_subdirectory(test)
