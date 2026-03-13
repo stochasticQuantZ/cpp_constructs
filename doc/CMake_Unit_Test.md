@@ -47,4 +47,28 @@
 # Variable: 
 - CMAKE_CXX_STANDARD
 - CMAKE_CXX_STANDARD_REQUIRED
-- 
+- option : to include an option if something to be included or NOT
+- message("..message..")
+- -D applicable for variables as well
+
+# Makefile
+- label:
+-  -DCMAKE_BUILD_TYPE=Release 
+
+# Cache File
+- can modify some to accelerate the build
+
+# Config file
+- x.y.z x: major, y: minor, z:patch
+- .in (replaced)
+
+# Submodule
+- go to git root
+- create a dir like "github.com"
+- git submodule add https://github.com/nlohmann/json github.com/json
+
+
+# Fetchcontent
+- project name as fetch content declare
+- shallow true -> no recursive calls
+- Project name :: Library name

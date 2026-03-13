@@ -2,6 +2,8 @@
 #include "singleton/singleton.hpp"
 #include <nlohmann/json.hpp>
 
+#include <fmt/format.h>
+
 namespace cpp_constructs {
 
 
@@ -16,7 +18,7 @@ int test_le_be(void) {
     }
 
     std::cout << "JSON _version" << NLOHMANN_JSON_VERSION_MAJOR << "." << NLOHMANN_JSON_VERSION_MINOR << "." << NLOHMANN_JSON_VERSION_PATCH << std::endl;
-
+    std::cout << " FMT Version: " << FMT_VERSION << std::endl;
  
     return 0;
 }

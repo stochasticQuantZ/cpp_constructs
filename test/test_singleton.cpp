@@ -19,6 +19,8 @@ int main() {
     std::cout << "All Singleton tests passed!" << std::endl;
 
     auto x = cpp_constructs::test_le_be();
+
+    
     return 0;
 }
 

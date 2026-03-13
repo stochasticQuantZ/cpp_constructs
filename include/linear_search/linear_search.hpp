@@ -1,0 +1,1 @@
+bool linear_search(std::vector<int> vec, int element);
