@@ -22,3 +22,17 @@ target_link_libraries(linear_search
 target_include_directories(linear_search
     PUBLIC 
     "../include")
+
+
+add_library(sqlite_db
+    database/sqlite_db.cpp
+)
+
+target_include_directories(sqlite_db PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+    ${SQLite3_INCLUDE_DIRS}
+)
+
+target_link_libraries(sqlite_db PRIVATE
+    ${SQLite3_LIBRARIES}
+)
