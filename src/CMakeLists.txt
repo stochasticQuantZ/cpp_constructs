@@ -36,3 +36,6 @@ target_include_directories(sqlite_db PRIVATE
 target_link_libraries(sqlite_db PRIVATE
     ${SQLite3_LIBRARIES}
 )
+
+
+add_subdirectory(elasticsearch)

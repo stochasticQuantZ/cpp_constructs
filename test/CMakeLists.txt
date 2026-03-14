@@ -133,3 +133,6 @@ target_include_directories(database_test PRIVATE
 target_link_libraries(database_test PRIVATE
     sqlite_db
 )
+
+
+add_subdirectory(es)
