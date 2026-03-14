@@ -42,6 +42,15 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(FMT)
 
 
+
+FetchContent_Declare(
+  cpp_httplib
+  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+  GIT_TAG v0.26.0
+)
+
+FetchContent_MakeAvailable(nlohmann_json cpp_httplib)
+
 # --- GoogleTest ---
 set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)  # don't install gtest
@@ -68,6 +77,7 @@ FetchContent_MakeAvailable(cpr)
 # ---- gRPC / Protobuf ----
 find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 
 # Helpful imported executables/targets
