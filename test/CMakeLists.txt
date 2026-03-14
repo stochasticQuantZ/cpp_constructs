@@ -45,6 +45,37 @@ target_link_libraries(test_permutation_client
     spdlog::spdlog
 )
 
+
+
+# Existing test targets can stay here
+
+add_executable(rest_api_demo
+  rest_api/rest_api_demo.cpp
+)
+
+target_link_libraries(rest_api_demo
+  PRIVATE
+    cpr::cpr
+    nlohmann_json::nlohmann_json
+    spdlog::spdlog
+)
+
+add_executable(test_rest_api
+  rest_api/test_rest_api.cpp
+)
+
+target_link_libraries(test_rest_api
+  PRIVATE
+    GTest::gtest_main
+    nlohmann_json::nlohmann_json
+)
+
+include(GoogleTest)
+gtest_discover_tests(test_rest_api)
+
+add_test(NAME RestApiDemoRuns COMMAND rest_api_demo)
+
+
 # # Optional GoogleTest-based test
 # add_executable(test_permutation
 #   gRPC/test_permutation.cpp

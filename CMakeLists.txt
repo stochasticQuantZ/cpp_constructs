@@ -54,6 +54,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# REST client library
+FetchContent_Declare(
+  cpr
+  GIT_REPOSITORY https://github.com/libcpr/cpr.git
+  GIT_TAG f091b2c061b307ee89b164c39976fc9202a1c79d
+  GIT_SHALLOW TRUE
+)
+set(CPR_CURL_USE_LIBPSL OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(cpr)
+
+
 # ---- gRPC / Protobuf ----
 find_package(Protobuf CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
