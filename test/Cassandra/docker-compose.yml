@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: cassandra_demo
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=DemoCluster
+      - CASSANDRA_NUM_TOKENS=16
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'DESC KEYSPACES' || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10

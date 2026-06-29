@@ -699,3 +699,470 @@ TEST(ReverseList , Basic) {
 
 
 }
+
+std::recursive_mutex mtx;
+std::mutex mtx2;
+void recusrive(int depth){
+  std::unique_lock<std::recursive_mutex> lock(mtx);
+  if(depth <=0){
+    return;
+  }
+  std::cout << "Depth " << depth << std::endl;
+  recusrive(depth-1);
+}
+
+
+void recursive_non_reentrant(int depth){
+  std::unique_lock<std::mutex> lock(mtx2);
+  if(depth <=0){
+    return;
+  }
+  std::cout << "Depth " << depth << std::endl;
+  recursive_non_reentrant(depth-1);
+}
+
+
+void lock_deferred(){
+  std::unique_lock<std::mutex> lock(mtx2, std::defer_lock);
+  // do some work
+  lock.lock();
+  // do some work
+  lock.unlock();
+}
+
+void transfer_lock(){
+  std::unique_lock<std::mutex> lock1(mtx2);
+  std::unique_lock<std::mutex> lock2(std::move(lock1));
+  // lock1 is now empty, lock2 owns the mutex
+  if(!lock1.owns_lock()){
+    std::cout << "Lock1 does not own the mutex" << std::endl;
+  }
+  if(lock2.owns_lock()){
+    std::cout << "Lock2 owns the mutex" << std::endl;
+  }
+}
+
+
+
+void transfer_owner_ship(){
+  std::mutex m1;
+  m1.lock();
+  std::unique_lock<std::mutex> lock(m1, std::adopt_lock);
+  // lock now owns the mutex m1
+  if(lock.owns_lock()){
+    std::cout << "Lock owns the mutex m1" << std::endl;
+  }
+
+}
+void try_lock_for_example(){
+  std::timed_mutex mtx3;
+  std::unique_lock<std::timed_mutex> lock(mtx3);
+  if(lock.try_lock_for(std::chrono::seconds(2))){
+    std::cout << "Lock acquired" << std::endl;
+    mtx3.unlock();
+  } else {
+    std::cout << "Failed to acquire lock after 1 second" << std::endl;
+  }
+}
+TEST(Recursive_Unique, Basic) {
+  //recusrive(5);
+  //recursive_non_reentrant(5); // will cause deadlock as the same thread tries to acquire the lock it already holds
+  // lock_deferred();
+  // transfer_lock();
+  // transfer_owner_ship();
+
+  // std::thread t1(try_lock_for_example);
+  // std::thread t2(try_lock_for_example);
+  // t1.join();
+  // t2.join();
+  
+}
+
+
+
+std::mutex q_mtx;
+std::queue<int> q;
+std::condition_variable q_cv;
+#define MAX_SIZE_Q 57
+
+
+void producer(int val) {
+  while(val){
+    std::unique_lock<std::mutex> lock(q_mtx);
+    q_cv.wait(lock, []() { return q.size() < MAX_SIZE_Q; }); // wait until queue has space
+    q.push(val);
+    std::cout << "Produced: " << val << std::endl;
+    val--;
+    lock.unlock();
+    q_cv.notify_one(); // notify consumer
+  }
+}
+
+
+void consumer() {
+  while(true){
+    std::unique_lock<std::mutex> lock(q_mtx);
+    q_cv.wait(lock, []() { return !q.empty(); }); // wait until queue has items
+    int val = q.front();
+    q.pop();
+    std::cout << "Consumed: " << val << std::endl;
+    lock.unlock();
+    q_cv.notify_one(); // notify producer
+  }
+}
+
+TEST(Recursive_Unique, Prod_Cons) {
+
+  std::thread prod(producer, 100);
+  std::thread cons(consumer);
+
+  prod.join();
+  cons.detach(); // consumer runs indefinitely, so we detach it
+
+}
+
+TEST(basic, Basic) {
+  std::cout << "Hello World test" << std::endl;
+
+}
+#include <future>
+#include <chrono>
+
+
+TEST(Async, basic) {
+  std::future<uint64_t> fut = std::async(std::launch::async, [](int n) {
+    uint64_t sum = 0;
+    for (uint64_t i = 0; i < n; ++i) {
+      sum += i;
+    }
+    return sum;
+  }, 100);
+
+  // Do some other work while the async task is running
+  std::cout << "Doing other work in main thread..." << std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+  uint64_t result = fut.get();
+  std::cout << "Result of async computation: " << result << std::endl;
+
+}
+
+TEST(move_semantics, basic) {
+  std::vector<int> v1 = {1,2,3,4,5};
+
+  std::vector<int> v2 = std::move(v1);
+  std::cout << "v2 size: " << v2.size() << std::endl; // v2 has the elements
+  std::cout << "v1 size: " << v1.size() << std::endl; // v1 is empty or in a valid but unspecified state
+}
+
+
+TEST(variadic_templates, basic) {
+  
+  auto product = [](auto... args) {
+    return (args * ...); // fold expression to multiply all arguments
+  };
+
+
+  std::cout << "Product of 1,2,3 is: " << product(1,2,3) << std::endl;
+  std::cout << "Product of 10,20 is: " << product(10,20) << std::endl;
+  std::cout << "Product of 5,10,15,20 is: " << product(5,10,15,20) << std::endl;
+
+
+  auto sum = [] (auto... args) {
+    return (args + ...); // fold expression to sum all arguments
+  };
+
+  std::cout << "Sum of 1,2,3 is: " << sum(1,2,3) << std::endl;
+  std::cout << "Sum of 10,20 is: " << sum(10,20) << std::endl;
+  std::cout << "Sum of 5,10,15,20 is: " << sum(5,10,15,20) << std::endl;
+}
+
+TEST(variadic_templates, recursive) {
+  // Recursive variadic template to calculate factorial
+  std::function<int(int)> factorial = [&factorial](int n) -> int {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+  };
+
+  std::cout << "Factorial of 5 is: " << factorial(5) << std::endl;
+  std::cout << "Factorial of 10 is: " << factorial(10) << std::endl;
+}
+
+TEST(stdref, basic) {
+  std::vector<int> v = {1,2,3,4,5};
+  std::vector<std::reference_wrapper<int>> ref_vec;
+  for (auto &x:v)
+    ref_vec.push_back(std::ref(x)); // store reference to x in ref_vec
+
+  for (auto &ref:ref_vec)
+    std::cout << "Reference wrapper value: " << ref.get() << std::endl; // access the value through get()
+}
+#include <string_view>
+TEST(stringview, basic) {
+  std::string str = "Hello, World!";
+  std::string_view sv(str); // create a string_view that references str
+
+  std::cout << "String view: " << sv << std::endl; // prints "Hello, World!"
+  std::cout << "Size of string view: " << sv.size() << std::endl; // prints the size of the string view
+
+  // Modifying the original string will affect the string_view
+  // why string view? 
+  // because it is a non-owning reference to a string, 
+  // it does not manage the memory of the string, 
+  // it is lightweight and efficient for read-only access to strings, 
+  // it can be used to avoid unnecessary copying of strings, and it can be used to create substrings without copying the original string.
+
+  str[7] = 'C';
+  std::cout << "Modified string view: " << sv << std::endl; // prints "Hello, Corld!"
+}
+
+
+ std::vector<int> createVector() {
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+    return vec; // Copy elision may occur here
+  }
+
+TEST(democopyelision, moderate){
+  // Copy elision is an optimization technique where the compiler can eliminate unnecessary copy and move operations, 
+  // even if the copy/move constructor has side effects. 
+  // This can lead to improved performance by avoiding the overhead of copying or moving objects.
+
+  // Example of copy elision:
+ 
+  // what happened above is that the compiler can optimize the return statement to construct the vector directly in the memory location where it will be used,
+  // meaning of eiision is that the compiler can eliminate the temporary object that would normally be created when returning a value from a function, 
+  // and instead construct the object directly in the memory location where it will be used.
+
+  std::vector<int> myVec = createVector(); // No copy or move constructor is called here due to copy elision
+  for (int num : myVec) {
+    std::cout << num << " ";
+  }
+  std::cout << std::endl;
+}
+
+
+TEST(demouniquelock,defer_lock){
+  std::mutex mtx;
+  std::unique_lock<std::mutex> lock(mtx, std::defer_lock); // Create a unique_lock that does not acquire the mutex immediately
+
+  // Do some work here without holding the lock
+
+  lock.lock(); // Now acquire the lock when needed
+  // Critical section protected by the mutex
+  std::cout << "Lock acquired, doing critical work..." << std::endl;
+
+  lock.unlock(); // Release the lock when done
+}
+
+TEST(demouniquelock, transfer_ownership){
+  std::mutex mtx;
+  std::unique_lock<std::mutex> lock1(mtx); // lock1 acquires the mutex
+  std::unique_lock<std::mutex> lock2(std::move(lock1)); // Transfer ownership from lock1 to lock2
+
+  if (!lock1.owns_lock()) {
+    std::cout << "lock1 does not own the mutex" << std::endl;
+  }
+  if (lock2.owns_lock()) {
+    std::cout << "lock2 owns the mutex" << std::endl;
+  }
+
+  // lock2 will automatically release the mutex when it goes out of scope
+}
+
+
+TEST(deomstdlock, stdlock){
+  std::mutex mtx1, mtx2;
+  std::thread t1([&]() {
+    std::lock(mtx1, mtx2); // Lock both mutexes without deadlock
+    std::cout << "Thread 1 has locked both mutexes" << std::endl;
+    mtx1.unlock();
+    mtx2.unlock();
+  });
+
+  std::thread t2([&]() {
+    std::lock(mtx1, mtx2); // Lock both mutexes without deadlock
+    std::cout << "Thread 2 has locked both mutexes" << std::endl;
+    mtx1.unlock();
+    mtx2.unlock();
+  });
+
+  t1.join();
+  t2.join();
+}
+
+
+TEST(demofuture, basic){
+  std::promise<uint64_t> prom_to_calculate_sum;
+  auto future_sum = prom_to_calculate_sum.get_future();
+  // Now calculate the sum
+  std::thread t1([](std::promise<uint64_t> &&promise, uint64_t start, uint64_t end) 
+  {
+    uint64_t sum=0;
+    for(uint64_t i=start; i< end;i++){
+      sum += i;
+    }
+    promise.set_value(sum); // Set the value of the promise
+
+  }, std::move(prom_to_calculate_sum), 0, 100);
+
+  std::cout << "Demo future - promise Sum = " << future_sum.get() << std::endl;
+  t1.join();
+
+}
+
+
+  class Rectangle {
+  protected:
+    int width;
+    int height;
+  public:
+    Rectangle(int w, int h) : width(w), height(h) {}
+    virtual int area() const { return width * height; }
+    virtual void setWidth(int w) { width = w; }
+    virtual void setHeight(int h) { height = h; }
+  };
+
+  class Square : public Rectangle {
+  public:
+    Square(int side) : Rectangle(side, side) {}
+    void setWidth(int w) override {
+      width = w;
+      height = w; // Ensure height is always equal to width
+    }
+    void setHeight(int h) override {
+      height = h;
+      width = h; // Ensure width is always equal to height
+    }
+  };
+
+
+TEST(demoliskovssubstitution, violatesliskovsubstitution){ 
+  // Liskov Substitution Principle states that objects of a superclass should be replaceable with objects of a subclass without affecting the correctness of the program. 
+  // In other words, if S is a subtype of T, then objects of type T may be replaced with objects of type S without altering any of the desirable properties of the program (correctness, task performed, etc.).
+  // define a function to justify why square should not inherit rectangle
+    auto calculateArea = [](Rectangle &rect) {
+      rect.setWidth(10);
+      rect.setHeight(5);
+      std::cout << "Area: " << rect.area() << std::endl; // Expected area is 50 for a rectangle
+    };
+
+
+  Rectangle rect(0,0);
+  calculateArea(rect); // This will work fine and print Area: 50
+
+  Square sq(0);
+  calculateArea(sq); // This will violate Liskov Substitution Principle and print Area
+  // because when we set width to 10 and height to 5 for the square, it will actually set both width and height to 10 (or both to 5),
+  // which will lead to an incorrect area calculation (100 or 25 instead of 50), thus violating the principle that a Square should be substitutable for a Rectangle without affecting the correctness of the program.
+
+}
+
+
+class GeometricFigure {
+public:
+    virtual int area() const = 0;
+    virtual ~GeometricFigure() = default;
+};
+
+
+class Rectangle_N : public GeometricFigure {
+private:
+    int width;
+    int height;
+
+public:
+    Rectangle_N(int w, int h) : width(w), height(h) {}
+
+    int area() const override {
+        return width * height;
+    }
+};
+class Square_N : public GeometricFigure {
+private:
+    int side;
+
+public:
+    explicit Square_N(int s) : side(s) {}
+
+    int area() const override {
+        return side * side;
+    }
+};
+
+
+
+TEST(demosolvelsp, solveaboveusingGeometricFigureInterface){
+
+  auto printArea = [](const GeometricFigure &shape){
+    std::cout << "Area: " << shape.area() << std::endl;
+  };
+
+  Rectangle_N r(5, 10);
+  Square_N s(5);
+
+  printArea(r);  // 50
+  printArea(s);  // 25
+
+}
+
+TEST(stdvariantdemo, basic){
+  std::variant<int, std::string> var;// var can hold either an int or a string
+  var = 42; // var holds an int
+  std::cout << "Variant holds int: " << std::get<int>(var) << std::endl;
+
+  var = "Hello, Variant!"; // var now holds a string
+  std::cout << "Variant holds string: " << std::get<std::string>(var) << std::endl;
+
+  // Using std::visit to handle the variant
+  std::visit([](auto&& arg){
+    using T = std::decay_t<decltype(arg)>;// deduce the type of arg, decay_t removes references and cv-qualifiers
+    if constexpr (std::is_same_v<T, int>) {
+      std::cout << "Visited int: " << arg << std::endl;
+    } else if constexpr (std::is_same_v<T, std::string>) {
+      std::cout << "Visited string: " << arg << std::endl;
+    }
+  }, var);
+}
+
+TEST(simpleexamplestdvariant, basic){
+  std::variant<int, double, std::string> var;
+  var = 10; // holds an int
+  std::cout << "Variant holds int: " << std::get<int>(var) << std::endl;
+
+  var = 3.14; // holds a double
+  std::cout << "Variant holds double: " << std::get<double>(var) << std::endl;
+
+  var = "Hello, World!"; // holds a string
+  std::cout << "Variant holds string: " << std::get<std::string>(var) << std::endl;
+}
+
+  template<typename... Types>
+  using MyVariant = std::variant<Types...>;
+
+TEST(variantwithvariadictemplate, basic) {
+  // std::variant can also be used with variadic templates to create a variant that can hold any type from a list of types. 
+  // This allows for more flexibility and can be useful in situations where you want to store different types of data in a single variable.
+
+
+
+  MyVariant<int, double, std::string> var;
+  var = 42; // holds an int
+  std::cout << "MyVariant holds int: " << std::get<int>(var) << std::endl;
+
+  var = 3.14; // holds a double
+  std::cout << "MyVariant holds double: " << std::get<double>(var) << std::endl;
+
+  var = "Hello, Variadic Variant!"; // holds a string
+  std::cout << "MyVariant holds string: " << std::get<std::string>(var) << std::endl;
+}
+  inline constexpr int MAX_SIZE = 100; // Define an inline constexpr variable
+
+
+TEST(democonstexprwithinline, basic) {
+  // constexpr with inline variables allows you to define constants that can be evaluated at compile time 
+  // and are also inline, meaning they can be defined in header files without violating the 
+  // One Definition Rule (ODR). 
+  // This is particularly useful for defining constants that need to be shared across multiple translation units.
+
+
+  std::cout << "Max size: " << MAX_SIZE << std::endl; // Use the constant
+}
