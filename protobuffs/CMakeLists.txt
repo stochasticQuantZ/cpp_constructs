@@ -1,5 +1,6 @@
 set(PROTO_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/permutation.proto
+  ${CMAKE_CURRENT_SOURCE_DIR}/permutation.proto
+  ${CMAKE_CURRENT_SOURCE_DIR}/lcm.proto
 )
 
 # Generated files go into build/protobuffs_gen
@@ -14,11 +15,6 @@ else()
 endif()
 
 find_program(_GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
-
-set(GENERATED_PROTO_SRCS)
-set(GENERATED_PROTO_HDRS)
-set(GENERATED_GRPC_SRCS)
-set(GENERATED_GRPC_HDRS)
 
 foreach(PROTO_FILE ${PROTO_FILES})
   get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
@@ -42,27 +38,23 @@ foreach(PROTO_FILE ${PROTO_FILES})
     VERBATIM
   )
 
-  list(APPEND GENERATED_PROTO_SRCS ${PROTO_SRC})
-  list(APPEND GENERATED_PROTO_HDRS ${PROTO_HDR})
-  list(APPEND GENERATED_GRPC_SRCS ${GRPC_SRC})
-  list(APPEND GENERATED_GRPC_HDRS ${GRPC_HDR})
+  # Create a library per-proto for easy linking
+  add_library(${PROTO_NAME}_proto
+    ${PROTO_SRC}
+    ${GRPC_SRC}
+  )
+
+  target_include_directories(${PROTO_NAME}_proto
+    PUBLIC
+      ${PROTO_GEN_DIR}
+  )
+
+  target_link_libraries(${PROTO_NAME}_proto
+    PUBLIC
+      protobuf::libprotobuf
+      gRPC::grpc++
+  )
+
+  # Optional alias for nicer linking
+  add_library(cpp_constructs::${PROTO_NAME}_proto ALIAS ${PROTO_NAME}_proto)
 endforeach()
-
-add_library(permutation_proto
-  ${GENERATED_PROTO_SRCS}
-  ${GENERATED_GRPC_SRCS}
-)
-
-target_include_directories(permutation_proto
-  PUBLIC
-    ${PROTO_GEN_DIR}
-)
-
-target_link_libraries(permutation_proto
-  PUBLIC
-    protobuf::libprotobuf
-    gRPC::grpc++
-)
-
-# Optional alias for nicer linking
-add_library(cpp_constructs::permutation_proto ALIAS permutation_proto)

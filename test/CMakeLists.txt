@@ -46,6 +46,28 @@ target_link_libraries(test_permutation_client
 )
 
 
+# LCM gRPC server and client
+add_executable(test_lcm_server
+  LCM/lcm_server.cpp
+)
+
+target_link_libraries(test_lcm_server
+  PRIVATE
+    cpp_constructs::lcm_proto
+    spdlog::spdlog
+)
+
+add_executable(test_lcm_client
+  LCM/lcm_client.cpp
+)
+
+target_link_libraries(test_lcm_client
+  PRIVATE
+    cpp_constructs::lcm_proto
+    spdlog::spdlog
+)
+
+
 
 # Existing test targets can stay here
 

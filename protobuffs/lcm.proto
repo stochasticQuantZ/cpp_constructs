@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package lcm;
+
+service LCMService {
+  // Compute least common multiple of two integers
+  rpc Compute (LCMRequest) returns (LCMReply);
+}
+
+message LCMRequest {
+  int64 a = 1;
+  int64 b = 2;
+}
+
+message LCMReply {
+  int64 result = 1;
+}
